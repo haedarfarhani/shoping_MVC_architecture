@@ -1,0 +1,8 @@
+package com.heydar.simplemcv.model.database.entity
+
+import androidx.room.Entity
+
+@Entity
+class Product {
+    
+}
