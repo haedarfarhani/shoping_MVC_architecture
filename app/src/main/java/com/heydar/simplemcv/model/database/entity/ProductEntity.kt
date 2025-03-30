@@ -5,10 +5,10 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 
-@Entity
-class Product {
+@Entity(tableName = "product")
+class ProductEntity {
     @PrimaryKey(autoGenerate = true)
-    var id: Int = 0
+    var productId: Int = 0
 
     @ColumnInfo(name = "login_id")
     var loginId: String? = null

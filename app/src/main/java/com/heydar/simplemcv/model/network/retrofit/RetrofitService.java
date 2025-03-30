@@ -1,8 +1,11 @@
 package com.heydar.simplemcv.model.network.retrofit;
 
+import android.util.Log;
+
 import com.heydar.simplemcv.utils.AppSharedPref;
 import com.heydar.simplemcv.utils.Constants;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -11,45 +14,69 @@ import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitService {
-    private final OkHttpClient httpClient;
-    private static Retrofit retrofit = null;
-    private final HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor();
 
-    public RetrofitService() {
+    private static volatile RetrofitService instance;
+    private final Retrofit retrofit;
+    private final HttpLoggingInterceptor httpLoggingInterceptor;
+
+    private RetrofitService() {
+        httpLoggingInterceptor = new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
         Interceptor interceptor = createInterceptor();
-        httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
-        httpClient = new OkHttpClient.Builder()
+
+        OkHttpClient httpClient = new OkHttpClient.Builder()
                 .addInterceptor(interceptor)
                 .addInterceptor(httpLoggingInterceptor)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(3, TimeUnit.SECONDS)
+                .readTimeout(3, TimeUnit.SECONDS)
+                .writeTimeout(3, TimeUnit.SECONDS)
                 .build();
-        retrofit = createRetrofit().build();
-    }
-    private Retrofit.Builder createRetrofit() {
-        return createRetrofit(GsonConverterFactory.create());
-    }
 
-    private Retrofit.Builder createRetrofit(Converter.Factory factory) {
-        return new Retrofit.Builder()
+        retrofit = new Retrofit.Builder()
                 .baseUrl(Constants.BASE_URL)
                 .client(httpClient)
-                .addConverterFactory(factory);
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
+                .build();
+    }
+
+    public static RetrofitService getInstance() {
+        if (instance == null) {
+            synchronized (RetrofitService.class) {
+                if (instance == null) {
+                    instance = new RetrofitService();
+                }
+            }
+        }
+        return instance;
     }
 
     public void setLoggingLevel(HttpLoggingInterceptor.Level level) {
         httpLoggingInterceptor.setLevel(level);
     }
 
+    public <T> T createService(Class<T> serviceClass) {
+        return retrofit.create(serviceClass);
+    }
+
     private Interceptor createInterceptor() {
         return chain -> {
-            String token = AppSharedPref.getToken();
+            String token = AppSharedPref.getToken() != null ? AppSharedPref.getToken() : "";
+            Log.d("TAG234", "createInterceptor: " + token);
             Request request = chain.request().newBuilder()
-                    .header("sessionToken", token)
+                    .header("x-parse-session-token", token)
                     .header("X-Parse-Application-Id", Constants.APPLICATION_ID)
                     .header("X-Parse-REST-API-Key", Constants.REST_API_KEY)
                     .header("Content-Type", "application/json")
@@ -58,3 +85,4 @@ public class RetrofitService {
         };
     }
 }
+

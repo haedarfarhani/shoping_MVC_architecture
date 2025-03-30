@@ -5,14 +5,17 @@ import androidx.room.Database
 import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
 import com.heydar.simplemcv.model.database.dao.ProductDao
-import com.heydar.simplemcv.model.database.entity.Product
+import com.heydar.simplemcv.model.database.dao.UserDao
+import com.heydar.simplemcv.model.database.entity.ProductEntity
+import com.heydar.simplemcv.model.database.entity.UserEntity
 import com.heydar.simplemcv.utils.Constants
 import kotlin.concurrent.Volatile
 
 
-@Database(entities = [Product::class], version = 1)
+@Database(entities = [ProductEntity::class,UserEntity::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
+    abstract fun userDao(): UserDao
     companion object {
         @Volatile
         var INSTANCE: AppDatabase? = null

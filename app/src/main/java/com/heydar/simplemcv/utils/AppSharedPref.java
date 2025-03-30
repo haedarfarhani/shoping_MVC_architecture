@@ -13,7 +13,7 @@ public class AppSharedPref {
         return (String) SPUtils.get(sharedPreferences, "access_token", "");
     }
     public static void setToken(String token) {
-        SPUtils.put(sharedPreferences, "access_token", token, true);
+        SPUtils.put(sharedPreferences, "access_token", token, false);
     }
 
 }
